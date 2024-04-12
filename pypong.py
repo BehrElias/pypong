@@ -6,6 +6,7 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600))
 clock = pygame.time.Clock()
 running = True
+
 #Ball
 ball = pygame.image.load('./images/pypong-image-ball.png').convert()
 ball_position_x = 390
@@ -68,6 +69,9 @@ while running:
                 
             if event.key == pygame.K_DOWN:
                 player_position_y = player_position_y + paddle_movement_speed
+
+            if event.key == pygame.K_q:
+                running=False
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("white")
