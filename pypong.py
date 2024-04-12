@@ -13,19 +13,26 @@ ball_position_x = 390
 ball_position_y = 290
 ball_flying_right = False
 ball_flying_down = False
+ball_rect = pygame.Rect(ball_position_x, ball_position_y, 20, 20)
+
 
 #Player Paddle
 player_paddle =pygame.image.load('./images/pypong-image-player-paddle.png').convert()
 player_position_x = 40
 player_position_y = 250
+player_rect = pygame.Rect(player_position_x, player_position_y, 20, 100)
+
 
 #Computer Paddle
 computer_paddle =pygame.image.load('./images/pypong-image-computer-paddle.png').convert()
 computer_position_x = 760
 computer_position_y = 250
+computer_rect = pygame.Rect(computer_position_x, computer_position_y, 20, 100)
 
 paddle_movement_speed = 15
-ball_movement_speed = 7
+ball_movement_speed_vertical = 5
+ball_movement_speed_horizontal = 9
+
 
 # score
 player_score = 0
@@ -38,24 +45,10 @@ def reset_game():
     ball_position_y = 290
 
 def ball_hitting_computer_paddle():
-    global ball_flying_right
-    
-    # Überprüfen, ob der Ball das Paddle des Computers berührt
-    if ball_position_x <= computer_position_x + 20 and ball_position_x + 20 >= computer_position_x:
-        if ball_position_y + 20 >= computer_position_y and ball_position_y <= computer_position_y + 100:
-            return True
-    
-    return False
+    return ball_rect.collidepoint()
 
 def ball_hitting_player_paddle():
-    global ball_flying_right
-    
-    # Überprüfen, ob der Ball das Paddle des Spielers berührt
-    if ball_position_x + 20 >= player_position_x and ball_position_x <= player_position_x + 20:
-        if ball_position_y + 20 >= player_position_y and ball_position_y <= player_position_y + 100:
-            return True
-    
-    return False
+    return player_rect.colliderect(ball_rect)
 
 while running:
     # poll for events
@@ -63,6 +56,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEMOTION:
+            player_position_y = event.pos[1] - 50
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 player_position_y = player_position_y - paddle_movement_speed
@@ -87,13 +82,13 @@ while running:
 
     # Ball Flug Logik 
     if ball_flying_right == True:
-        ball_position_x = ball_position_x + ball_movement_speed
+        ball_position_x = ball_position_x + ball_movement_speed_horizontal
     if ball_flying_right == False:
-        ball_position_x = ball_position_x - ball_movement_speed
+        ball_position_x = ball_position_x - ball_movement_speed_horizontal
     if ball_flying_down == True:
-        ball_position_y = ball_position_y + ball_movement_speed
+        ball_position_y = ball_position_y + ball_movement_speed_vertical
     if ball_flying_down == False:
-        ball_position_y = ball_position_y - ball_movement_speed
+        ball_position_y = ball_position_y - ball_movement_speed_vertical
 
     # Ball Steuerungslogik
     if ball_position_y <= 0:
@@ -102,36 +97,58 @@ while running:
         ball_flying_down = False
     if ball_position_x <= 0:
         ball_flying_right = True
+        
+    if ball_rect.center[1] > computer_rect.center[1]:
+        computer_position_y = computer_position_y + 3
+    if ball_rect.center[1] < computer_rect.center[1]:
+        computer_position_y = computer_position_y - 3
 
     if ball_position_x >= 800: # player scored
         player_score = player_score + 1
         ball_flying_right = False
         ball_position_x = 390
-    ball_position_y = 290
+        ball_position_y = 290
     if ball_position_x <= 0: # computer scored
         computer_score = computer_score + 1
         ball_flying_right = True
         ball_position_x = 390
         ball_position_y = 290
 
-    if ball_hitting_computer_paddle():
+    ball_rect.left = ball_position_x
+    ball_rect.top = ball_position_y
+    
+    player_rect.left = player_position_x   
+    player_rect.top = player_position_y
+    
+    computer_rect.left = computer_position_x
+    computer_rect.top = computer_position_y
+
+
+    if pygame.Rect.colliderect(ball_rect, player_rect):
         ball_flying_right = True
-    if ball_hitting_player_paddle():
+    if pygame.Rect.colliderect(ball_rect, computer_rect):
         ball_flying_right = False
 
     # RENDER YOUR GAME HERE
     screen.blit(ball, (ball_position_x, ball_position_y))
+    #pygame.draw.rect(screen, "aquamarine", ball_rect,  2)
     screen.blit(player_paddle, (player_position_x, player_position_y))
+    #pygame.draw.rect(screen, "aquamarine", player_rect,  2)
     screen.blit(computer_paddle, (computer_position_x, computer_position_y))
+    #pygame.draw.rect(screen, "aquamarine", computer_rect,  2)
          
     # flip() the display to put your work on screen
     pygame.display.flip()
 
     clock.tick(60)  # limits FPS to 60
-
+    
+    # player wins
+    if player_score == 10:
+        running = False
+        print('Player has won')
+    # computer wins
+    if computer_score == 10:
+        running = False
+        print('Computer has won')
+        
 pygame.quit()
-
-# Fenster = 800x600
-# Ball = 20x20
-# Mitte Fenster = 400x300
-# Mitte Ball = 10x10
